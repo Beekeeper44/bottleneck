@@ -202,7 +202,7 @@ const STATUS = {
   pending_scan:             { c:'#5EE08A' },
   pending_rescan:           { c:'#FF5A5A' },
   pending_grading:          { c:'#C77DFF' },
-  pending_assembly:         { c:'#2DD4BF' },
+  pending_assembly:         { c:'#FFE14D' },
   pending_slabbing:         { c:'#D07BE8' },
   pending_release:          { c:'#F5A524' },
   pending_rejection:        { c:'#FF4F8B' },
@@ -213,134 +213,15 @@ const STATUS = {
 const statusOf = s => STATUS[norm(s)] || { c:'#8a96a3' };
 const titleCase = s => nice(s).replace(/\b\w/g, m=>m.toUpperCase());
 
-/* ---------- sample data (from Metabase screenshots) ---------- */
-const S = (set_sport,card_sport,player_name,set_name,grader_name,verified_date,source,card_status,id) =>
-  ({root_key:String(id),url:`https://admin.arenaclub.com/orders/0/cards/${id}`,set_sport,card_sport,player_name,set_name,grader_name,verified_date,source,card_status});
-const SAMPLE = [
-  S('baseball','basketball','Michael Jordan','Other 1991-92 Allan Kaye\'s Sports Cards News Magazine Standard-Size \'91','Ramoncito Lacaba','2026-09-26','non-repack','pending_slabbing',8812000),
-  S('baseball','basketball','Jonatan Clase','2022 Topps Heritage Minor League Real One Auto','Carmen Cortez','2026-09-26','repack','pending_slabbing',8811963),
-  S('football','basketball','Michael Jordan','Upper Deck 2023 Upper Deck Goodwin Champions Platinum','Steven John Ignacio','2026-09-25','repack','vaulted',8811926),
-  S('basketball','football','Trevor Lawrence','2021 Panini The National Vip','Donald Quinones','2026-09-25','non-repack','vaulted',8811889),
-  S('basketball','football','John Walsh','Classics 1995 Classic Five Sport Auto','Ian f','2026-09-25','non-repack','pending_release',8811852),
-  S('disney','star_wars','Fleet Transport','2025 Topps Disneyland 70th Anniversary \'54 On Wheels','Vince Alfred Fernandez','2026-09-25','non-repack','pending_slabbing',8811815),
-  S('football','basketball','Michael Jordan','2023 Skybox Metal Universe Champions','Joseph Anthony Somera','2026-09-24','repack','vaulted',8811778),
-  S('football','other','Chanesaw','Other 2026 Bo Jackson Battle Arena Tecmo Bowl Edition Tecmo News Battlefoil','Ramoncito Lacaba','2026-09-24','non-repack','pending_release',8811741),
-  S('baseball','basketball','Emmet Sheehan','2024 Topps Chrome','Calvin Caceres','2026-09-24','non-repack','vaulted',8811704),
-  S('basketball','football','Barry Sanders','Other 1991 Legends Sports Memorabilia','Marsen Lauren Hernandez','2026-09-24','repack','vaulted',8811667),
-  S('basketball','football','Brett Favre','2024 Panini The National Vip Gold Pack','Irish Gonzales','2026-09-24','non-repack','vaulted',8811630),
-  S('basketball','football','Philip Rivers','2019 Panini National Sports Collectors Convention Wrapper Redemption','Marsen Lauren Hernandez','2026-09-24','repack','vaulted',8811593),
-  S('baseball','other','Not Accepted','2025 Other Do Not Slab Aftermarket Auto','Kaity Paul','2026-09-24','non-repack','pending_customer_support',8811556),
-  S('disney','star_wars','Fleet Transport','2025 Topps Disneyland 70th Anniversary \'54 On Wheels','Jhon Ruzzel Gagaring','2026-09-23','non-repack','vaulted',8811519),
-  S('soccer','basketball','LeBron James','Other 2003-04 Firenze Campioni Di Futuro','Lean Joson','2026-09-23','non-repack','vaulted',8811482),
-  S('basketball','football','Christian McCaffrey','2017 Panini The National Vip','Benedict Bueno','2026-09-23','non-repack','vaulted',8811445),
-  S('football','multi_sport','Shohei Ohtani/Lionel Messi','2023 Leaf Special Release Exclusive Legends Edition','Calvin Caceres','2026-09-23','non-repack','pending_assembly',8811408),
-  S('football','basketball','Stephen Curry','2025 Panini National Convention Gold Packs Auto','John Paulo','2026-09-22','repack','vaulted',8811371),
-  S('basketball','football','Patrick Mahomes II','2017 Panini The National Vip Rookie','Laurence Dapon','2026-09-22','non-repack','vaulted',8811334),
-  S('football','baseball','Shohei Ohtani','2020 Panini Contenders','Carmen Cortez','2026-09-22','non-repack','vaulted',8811297),
-  S('football','baseball','Ken Griffey Jr.','2026 Panini Decades 90s Pop Culture','Camille Meneses','2026-09-22','non-repack','pending_release',8811260),
-  S('football','basketball','Luka Doncic','2019 Panini The National Vip','Calvin Caceres','2026-09-21','non-repack','vaulted',8811223),
-  S('disney','star_wars','Star Wars: Rise of the Resistance','2025 Topps Disneyland 70th Anniversary','One David Dizon','2026-09-21','non-repack','vaulted',8811186),
-  S('disney','star_wars','Fleet Transport','2025 Topps Disneyland 70th Anniversary \'54 On Wheels','One David Dizon','2026-09-19','non-repack','vaulted',8811149),
-  S('disney','star_wars','Fleet Transport','2025 Topps Disneyland 70th Anniversary \'54 On Wheels','Abraham Salisi','2026-09-19','non-repack','vaulted',8811112),
-  S('disney','star_wars','C-3PO','2025 Topps Disneyland 70th Anniversary 55\' Disneyland Icons','One David Dizon','2026-09-19','non-repack','vaulted',8811075),
-  S('disney','star_wars','Fleet Transport','2025 Topps Disneyland 70th Anniversary \'54 On Wheels','Kean Sta. Ana','2026-09-19','non-repack','vaulted',8811038),
-  S('football','baseball','Ken Griffey Jr.','2026 Panini Decades 90s Pop Culture','Abraham Salisi','2026-09-18','non-repack','pending_assembly',8811001),
-  S('baseball','other','Ray Confesses','Other 2019 Historic Autographs 1969','Benedict Bueno','2026-09-18','non-repack','pending_assembly',8810964),
-  S('football','soccer','Lionel Messi','2023 Leaf Web Exclusives Wins 1st Inter Miami Trophy','Adrian Carlo','2026-09-18','non-repack','pending_assembly',8810927),
-  S('pokemon','one_piece','Houndoom','2013 Pokemon B&W Jpn Megalo Cannon','Tyrone Jerome Moraleda','2026-09-18','non-repack','vaulted',8810890),
-  S('baseball','football','Jim Covert','2026 Leaf Sports Heroes Auto','Camille Meneses','2026-09-18','non-repack','pending_assembly',8810853),
-  S('football','basketball','Luka Doncic','2025 Panini National Convention Silver Packs National Insert','Laurence Dapon','2026-09-17','non-repack','vaulted',8810816),
-  S('disney','star_wars','Fleet Transport','2025 Topps Disneyland 70th Anniversary \'54 On Wheels','Michaela Cruz','2026-09-17','non-repack','vaulted',8810779),
-  S('disney','star_wars','Fleet Transport','2025 Topps Disneyland 70th Anniversary \'54 On Wheels','Ian f','2026-09-17','non-repack','vaulted',8810742),
-  S('football','multi_sport','Magic Johnson/Dan Marino/Mike Schmidt/Larry Bird','2025 Leaf Glory Of The Game The 7','One David Dizon','2026-09-17','non-repack','pending_assembly',8810705),
-  S('football','basketball','Chet Holmgren','2023 Panini Father\'s Day','John Paulo','2026-04-08','non-repack','vaulted',8531009),
-  S('football','pokemon','Ashton Jeanty','2025 Panini Absolute Hog Heaven','Lea Alan DeBruin','2026-04-08','non-repack','vaulted',8531044),
-  S('baseball','football','Corey Seager','2016 Topps Now','Laimer King De Guzman','2026-04-07','non-repack','vaulted',8529120),
-  S('basketball','baseball','Alex Rodriguez','Classics 1993 Classic Four Sport','Ramoncito Lacaba','2026-04-07','non-repack','vaulted',8529188),
-  S('basketball','baseball','Baylor Scheierman','2024-25 Panini Donruss Rated Rookie','Jordan Hunt','2026-04-06','non-repack','vaulted',8527761),
-  S('baseball','hockey','Wayne Gretzky','Topps 1991 Stadium Club Charter Member','Aaron Adrianne Joaquin','2026-04-01','repack','vaulted',8519002),
-  S('basketball','baseball','Tim Tebow','2017 Panini Father\'s Day Panini Collection','Ian Benedict Banua','2026-04-01','non-repack','vaulted',8519033),
-  S('disney','other','Mickey Mouse','Other 1956 Walt Disney Cartooning Card','Maher Calingasan','2026-03-31','non-repack','vaulted',8517210),
-  S('one_piece','other','Monkey D. Luffy','Other 2022 One Piece Jpn Paramount War','Kean Sta. Ana','2026-03-24','non-repack','vaulted',8503355),
-  S('basketball','football','Bo Nix','Other 2023 Sports Illustrated For Kids','Blaise Endico','2026-03-19','non-repack','vaulted',8494102),
-  S('baseball','wrestling','Steve Austin/Ric Flair/Goldberg','2025 Leaf Metal Happy Holidays Triple Auto','Emmanuel Queipo','2026-03-18','non-repack','vaulted',8492890),
-  S('basketball','hockey','Joe Thornton','Other 1996-97 Score Board All Sport Ppf','Mhike Joshua Mendoza','2026-03-13','non-repack','vaulted',8483311),
-  S('basketball','football','Diana Flores','2024 Leaf Metal Women Of Sport She Got Game','Ramoncito Lacaba','2026-03-12','non-repack','vaulted',8481004),
-  S('basketball','other','Amber Glenn','2025 Leaf Metal Women Of Sport Breaking Barriers','Laimer King De Guzman','2026-03-12','non-repack','vaulted',8481077),
-  S('baseball','basketball','Cade Cunningham','2022 Panini Father\'s Day','Benedict Bueno','2026-03-09','non-repack','vaulted',8476540),
-  S('baseball','hockey','Wayne Gretzky','Topps 1991 Stadium Club Charter Member','mark anthony quindoy','2026-03-06','non-repack','vaulted',8471220),
-  S('baseball','basketball','Luis Severino','2016 Panini National Treasures Rke.Mat.Sig.','nelzon litrero','2026-03-06','non-repack','vaulted',8471299),
-  S('basketball','baseball','Tyrese Maxey','2025-26 Topps Chrome','Jules Matthew Villanueva','2026-03-05','non-repack','vaulted',8469013),
-  S('football','baseball','Felnin Celesten','2022 Skybox Metal Universe Champions Multi-Sport','nelzon litrero','2026-03-03','non-repack','vaulted',8465120),
-  S('baseball','garbage_pail_kids','Hungry Henderson','2023 Topps Garbage Pail Kids X Mlb Series 3','Mhike Joshua Mendoza','2026-02-28','non-repack','vaulted',8459031),
-  S('football','basketball','Sophie Cunningham','2025 Panini National Convention Gold Packs','Calvin Caceres','2025-12-03','non-repack','vaulted',8290112),
-  S('baseball','football','Trevor Lawrence','2021 Leaf Flash Rookies','nelzon litrero','2025-12-03','non-repack','vaulted',8290150),
-  S('baseball','football','Oneil Cruz','2025 Topps City Connect Swch.Rlc.','Aaron Adrianne Joaquin','2025-11-29','non-repack','vaulted',8283009),
-  S('basketball','other','Dallas Seavey','Other 2023 Sportkings Volume 4 Single Mem.','Kean Sta. Ana','2025-11-27','non-repack','vaulted',8280014),
-  S('pokemon','basketball','Snover','2025 Pokemon Mega Evolution','One David Dizon','2025-11-26','non-repack','vaulted',8278810),
-  S('football','baseball','Travis Bazzana','2025 Panini National Convention Gold Packs','nelzon litrero','2025-11-25','non-repack','vaulted',8277001),
-  S('football','basketball','Shaquille O\'Neal','2025 Panini National Convention Gold Packs','nelzon litrero','2025-11-25','non-repack','vaulted',8277032),
-  S('football','basketball','Luka Doncic','2025 Panini National Convention Case Breaker','nelzon litrero','2025-11-25','non-repack','vaulted',8277070),
-  S('olympics','other','Kayla Harrison','2012 Topps U.S. Olympic Team And Olympic Hopefuls Games','Emmanuel Queipo','2025-11-15','non-repack','vaulted',8262219),
-  S('football','basketball','GG Jackson','2022-23 Bowman University Inception Auto','Rusty Khent Saludo','2025-11-13','non-repack','vaulted',8259980),
-  S('football','soccer','Bo Nix','2024 Panini Instant Nfl','nelzon litrero','2025-11-11','non-repack','vaulted',8257003),
-  S('baseball','other','Michael Phelps','2009 Topps Allen & Ginter','Ma. Julaila Castillo','2025-11-06','non-repack','vaulted',8250091),
-  S('wrestling','basketball','Tyrese Haliburton/Jalen Brunson','2025 Topps Now Wwe','Benedict Bueno','2025-11-04','non-repack','vaulted',8247700),
-  S('basketball','wrestling','Undertaker','2023 Panini The National Vip Gold Packs','Benedict Bueno','2025-11-01','non-repack','vaulted',8243118),
-  S('basketball','hockey','Mario Lemieux','2024 Leaf Anime Nation','Lean Joson','2025-10-29','non-repack','vaulted',8239011),
-  S('basketball','basketball','Michael Jordan','Upper Deck 1995 Upper Deck','Ian f','2025-10-28','non-repack','vaulted',8237720),
-].filter(r=>r.set_sport!==r.card_sport);
 
-const P = (ac8_number,cert_number,set_name,player_name,set_number,grade) =>
-  ({card_url:`https://admin.arenaclub.com/cards/${ac8_number}`,card_status:'pending_data_issue',ac8_number,cert_number,set_name,player_name,set_number,grade});
-const SAMPLE_PENDING = [
-  P('4088484','','2026 Donruss','Paul Skenes','JK-PS','9.5'),
-  P('3995935','121914834','2018-19 Panini Absolute Memorabilia','Stephen Curry','AA-SC','10'),
-  P('4163467','42157367','Ultimate Topps Living Set','Manny Machado','88','9'),
-  P('3838659','','1992-93 Upper Deck','Michael Jordan','AW9','7'),
-  P('3865929','','2026 One Piece','Crocodile','ST30-010 C','10'),
-  P('3865750','','2025 One Piece','Monkey.D.Luffy','OP10-118 SEC','9.5'),
-  P('4068245','','2026 One Piece','Nami','OP15-086 SR','9'),
-  P('3869462','','2025 Topps Chrome','Ashton Jeanty','322','7'),
-  P('4088486','','2026 Bowman','Jacob Misiorowski','35','8.5'),
-  P('3514709','6116872005','2020 Pokemon SWSH','Eevee V','SWSH065','9'),
-  P('3932467','','2025-26 Hoops','Nikola Jokic','290','9.5'),
-  P('3866344','','2023 One Piece','Gum-Gum Giant Sumo Slap','ST10-015 C','10'),
-  P('3991391','','2024 Star Wars: Unlimited','General Grievous','034','9'),
-  P('4016830','','2024 Star Wars: Unlimited','Kit Fisto','165','8'),
-  P('3039724','','1996-97 Topps Stadium Club','Kobe Bryant','R9','7'),
-  P('4088485','','2025-26 Topps Chrome Cosmic','Kon Knueppel','197','9.5'),
-  P('3986069','','2024 Star Wars: Unlimited','Admiral Trench','086','8.5'),
-  P('3757874','','1986-87 Fleer','Michael Jordan','57','1'),
-  P('3938186','155325408','2018 Topps Series 2','Shohei Ohtani','83-1','9'),
-  P('3869461','','2025 Topps Chrome Black','RJ Harvey','115','9'),
-  P('1926580','','1990 Topps','Ken Griffey, Jr.','336','8'),
-];
-const C = (order_number,full_name,raw,graded,total_cards,bins,pending_scan_cards) =>
-  ({url:`https://admin.arenaclub.com/orders/${order_number}`,order_number,status:'pending_customer_support',full_name,raw,graded,total_cards,bins,pending_scan_cards});
-const SAMPLE_SUPPORT = [
-  C('19028648','Shane Heirman',22,4,26,'#217',0),
-  C('19054584','Jerry Johnson',11,0,11,'#217',0),
-  C('19006797','William Bebeau',25,0,25,'#217',0),
-  C('18880647','Joe Michaels',25,0,25,'#217',0),
-  C('19360332','Bill Melchiori',15,35,50,'#217',0),
-  C('3541017','Arena Club',0,1,1,'',0),
-  C('7691078','Arena Club',0,1,1,'',0),
-  C('19277117','Gregory Carter',0,28,28,'#217; #279',27),
-  C('18689578','RICHARD MEDINA',0,33,33,'#217',32),
-  C('19649118','Eviltwin_Rook',7,0,7,'',0),
-  C('19395047','Shawn Harbaugh',8,8,16,'#217',15),
-  C('19677164','Nhan Truong',0,200,200,'',0),
-  C('19810802','Royce Wilkinson',0,2,2,'',0),
-  C('19859133','James Faulkner',0,1,1,'',0),
-];
 function keySupport(r){ r.root_key = 'support-'+String(r.order_number||r.url||'').replace(/[^\w-]/g,''); return r; }
 function keyPending(r){ r.root_key = 'pending-'+String(r.ac8_number||r.card_url||'').replace(/[^\w-]/g,''); return r; }
 
 /* ---------- state ---------- */
 const state = {
   section:'mismatch', tz:'America/Los_Angeles', auto:null, loadedAt:new Date(),
-  rows:{ mismatch:SAMPLE, scan:[], rescan:[], pending:SAMPLE_PENDING.map(keyPending), support:SAMPLE_SUPPORT.map(keySupport) },
+  rows:{ mismatch:[], scan:[], rescan:[], pending:[], support:[] },
+  status:{},   // per section: 'loading' | 'ok' | error message
   sortS:{ key:null, dir:'asc' },
   sortP:{ key:null, dir:'asc' },
   sort:{ key:'verified_date', dir:'desc' },
@@ -358,11 +239,12 @@ const nice = s => String(s||'').replace(/_/g,' ');
 /* ---------- data ---------- */
 async function load(sectionId){
   const sec = SECTIONS.find(s=>s.id===sectionId);
-  if(!sec.questionId) return;
+  if(!sec || !sec.questionId) return;
+  if(!state.rows[sectionId].length) state.status[sectionId]='loading';
   try{
     const r = await fetch(`/api/metabase?q=${sec.questionId}`);
-    if(!r.ok) throw new Error(r.status);
-    const data = await r.json();
+    let data; try{ data = await r.json(); }catch(e){ throw new Error(r.ok ? 'bad JSON from /api/metabase' : 'HTTP '+r.status+' — is api/metabase.js deployed?'); }
+    if(!r.ok) throw new Error(data.error || ('HTTP '+r.status));
     state.rows[sectionId] = (Array.isArray(data)?data:data.rows||[]).map(o=>{
       const x={}; for(const k in o) x[k.toLowerCase()]=o[k];
       if(x.verified_date) x.verified_date=String(x.verified_date).slice(0,10);
@@ -370,11 +252,12 @@ async function load(sectionId){
       if(sectionId==='support') keySupport(x);
       return x;
     });
-  }catch(e){ toast(`Couldn't load question ${sec.questionId} — showing sample data`); }
+    state.status[sectionId]='ok';
+  }catch(e){ console.error('Metabase load failed', sec.questionId, e); state.status[sectionId]=String(e.message||e); if(state.rows[sectionId].length) toast(`Q${sec.questionId}: refresh failed — showing last loaded data`); }
 }
 async function refresh(){
   $('#spin').classList.add('go');
-  await Promise.all([load(state.section), loadClicked()]);
+  await Promise.all([...SECTIONS.map(s=>load(s.id)), loadClicked()]);
   state.loadedAt = new Date();
   setTimeout(()=>{ $('#spin').classList.remove('go'); render(); },350);
 }
@@ -406,7 +289,7 @@ function daysSince(iso){ if(!iso) return null; return Math.round((new Date(today
 function fmtDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
 function sportCell(s){ const o=sportOf(s); return `<td class="sportcell" style="--c:${o.c};--t:${ink(o)}">${esc(nice(s))} <span class="ic" aria-hidden="true">${o.i}</span></td>`; }
 function uniq(rows,k){ return [...new Set(rows.map(r=>r[k]).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b))); }
-function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('show'),2200); }
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('show'),msg.length>60?7000:2200); }
 
 function filtered(){
   const f=state.f, has=(v,q)=>String(v||'').toLowerCase().includes(q.toLowerCase());
@@ -442,6 +325,13 @@ function render(){
   renderTabs();
   const time = new Intl.DateTimeFormat('en-US',{timeZone:state.tz,hour:'numeric',minute:'2-digit'}).format(state.loadedAt);
   $('#stamp').textContent = `updated ${time} ${state.tz.includes('Manila')?'PHT':'PT'}`;
+  const st=state.status[state.section], sec=SECTIONS.find(s=>s.id===state.section);
+  if(!state.rows[state.section].length && st && st!=='ok'){
+    $('#view').innerHTML = st==='loading'
+      ? `<div class="empty"><b><span class="spin go"></span>Loading ${esc(sec.name)}…</b>Pulling question ${sec.questionId} from Metabase.</div>`
+      : `<div class="empty"><b>Couldn't load ${esc(sec.name)}</b>Question ${sec.questionId}: ${esc(st)}<br><br><button class="pill" id="refreshBtn2" type="button">Try again</button></div>`;
+    return;
+  }
   if(state.section==='mismatch') renderMismatch();
   else if(state.section==='pending') renderPending();
   else if(state.section==='support') renderSupport();
@@ -697,7 +587,7 @@ document.addEventListener('click',e=>{
   const rb=e.target.closest('[data-restore]');
   if(rb){ markClicked(rb.dataset.restore,false); render(); toast('Put back in the open list'); return; }
   if(e.target.closest('#showClicked')){ state.showClicked=!state.showClicked; state.selected.clear(); render(); return; }
-  const t=e.target.closest('[data-sec],[data-sort],#clear,#copyUrls,#csv,#tz,#autoBtn,#refreshBtn,#enterBtn');
+  const t=e.target.closest('[data-sec],[data-sort],#clear,#copyUrls,#csv,#tz,#autoBtn,#refreshBtn,#refreshBtn2,#enterBtn');
   if(!t) return;
   if(t.dataset.sec){ state.section=t.dataset.sec; state.selected.clear(); load(state.section).then(render); render(); }
   else if(t.dataset.sort){ const k=t.dataset.sort, sk={pending:'sortP',support:'sortS'}[state.section]||'sort', cur=state[sk]; state[sk] = cur.key===k?{key:k,dir:cur.dir==='asc'?'desc':'asc'}:{key:k,dir:['verified_date','age','grade','raw','graded','total_cards','pending_scan_cards'].includes(k)?'desc':'asc'}; render(); }
@@ -706,7 +596,7 @@ document.addEventListener('click',e=>{
   else if(t.id==='csv'){ exportCsv(); }
   else if(t.id==='tz'){ const m=state.tz==='America/Los_Angeles'; state.tz=m?'Asia/Manila':'America/Los_Angeles'; $('#tz').classList.toggle('manila',m); $('#tzFlag').textContent=m?'🇵🇭':'🇺🇸'; $('#tzLabel').textContent=m?'MANILA':'PACIFIC'; render(); }
   else if(t.id==='autoBtn'){ if(state.auto){clearInterval(state.auto);state.auto=null;t.classList.remove('on');} else {state.auto=setInterval(refresh,60000);t.classList.add('on');toast('Auto refresh every 60s');} }
-  else if(t.id==='refreshBtn'){ refresh(); }
+  else if(t.id==='refreshBtn'||t.id==='refreshBtn2'){ refresh(); }
   else if(t.id==='enterBtn'){ refresh(); }
 });
 document.addEventListener('change',e=>{
@@ -730,7 +620,8 @@ function exportCsv(){
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=`${sup?'customer-support':pend?'pending-data-issue':'mismatch-set'}-${todayISO()}.csv`; a.click();
 }
 
-state.clicked=new Set(lsGet()); render(); Promise.all([load(state.section),loadClicked()]).then(()=>{ state.loadedAt=new Date(); render(); });
+state.clicked=new Set(lsGet()); SECTIONS.forEach(s=>state.status[s.id]='loading'); render();
+Promise.all([...SECTIONS.map(s=>load(s.id)),loadClicked()]).then(()=>{ state.loadedAt=new Date(); render(); });
 </script>
 </body>
 </html>
