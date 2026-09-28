@@ -6,7 +6,7 @@ api/clicked.js      shared list of cards already opened (Neon Postgres)
 
 ## Setup
 1. Question ids are already set in public/index.html → SECTIONS:
-   - Mis-match Set       635   https://arena-club.metabaseapp.com/question/635
+   - Mis-match Set       6351  https://arena-club.metabaseapp.com/question/6351
    - Pending Data Issue  6310  https://arena-club.metabaseapp.com/question/6310
    - Customer Support    7527  https://arena-club.metabaseapp.com/question/7527
 2. Make sure the API key's group can view the collections those questions live in.
@@ -14,7 +14,7 @@ api/clicked.js      shared list of cards already opened (Neon Postgres)
    - METABASE_HOST      https://arena-club.metabaseapp.com
    - METABASE_API_KEY   Metabase API key with access to that question's collection
    - DATABASE_URL       Neon connection string (table is created automatically)
-   - METABASE_ALLOWED_IDS (optional) 635,6310,7527
+   - METABASE_ALLOWED_IDS (optional) 6351,6310,7527
 4. Deploy.
 
 ## How opened cards work
