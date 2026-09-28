@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BottleNeck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f14; --panel:#0f141b; --row:#121821; --row-hover:#17202b; --line:#1e2733;
+  --text:#e8edf2; --muted:#8a96a3; --dim:#5b6673;
+  --green:#39FF14; --green-ink:#0b0f14; --blue:#3fb8ff; --purple:#9b7bff; --amber:#f5a524; --pink:#ff4f8b;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:"Lato",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color-scheme:dark;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#0b0f14; --panel:#0f141b; --row:#121821; } }
+:root[data-theme="dark"]{ --bg:#0b0f14; --panel:#0f141b; --row:#121821; }
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+
+/* header */
+header{display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--bg)}
+.logo{width:52px;height:46px;flex:none;object-fit:contain}
+.title h1{margin:0;font:900 30px/1 var(--sans);letter-spacing:-.5px}
+.title h1 .g{color:var(--green)}
+.title p{margin:6px 0 0;font:400 11px var(--mono);color:#cfd6dd;display:flex;align-items:center;gap:8px}
+.title p::before{content:"";width:6px;height:6px;border-radius:50%;background:#1f9d3a}
+.tz{margin-left:auto;display:flex;align-items:center;gap:8px;padding:5px 12px;border:1.5px solid var(--green);border-radius:999px;background:transparent;font:500 11px var(--mono);color:var(--green);letter-spacing:.5px;cursor:pointer}
+.tz.manila{border-color:var(--blue);color:var(--blue)}
+
+/* section tabs */
+nav.sections{display:flex;gap:4px;padding:0 20px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav.sections button{background:none;border:0;border-bottom:2px solid transparent;padding:13px 16px;font:500 12px var(--mono);letter-spacing:1px;color:var(--muted);cursor:pointer;white-space:nowrap;text-transform:uppercase}
+nav.sections button[aria-selected="true"]{color:var(--green);border-bottom-color:var(--green)}
+nav.sections button .ct{margin-left:8px;color:var(--dim)}
+nav.sections button[aria-selected="true"] .ct{color:var(--green);opacity:.7}
+
+main{padding:0 16px 32px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:20px 0;border-bottom:1px solid var(--line)}
+.pill{border:1px solid #2a3542;background:transparent;border-radius:999px;padding:7px 16px;font:500 11px var(--mono);letter-spacing:1px;cursor:pointer;text-transform:uppercase}
+.pill.on{background:var(--green);border-color:var(--green);color:var(--green-ink);font-weight:700}
+.pill:disabled{opacity:.35;cursor:default}
+.spin{display:inline-block;width:8px;height:8px;border:1.5px solid var(--green);border-right-color:transparent;border-radius:50%;margin-right:8px;vertical-align:middle}
+.spin.go{animation:r .7s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin.go{animation:none}}
+.stamp{font:400 11px var(--mono);color:var(--dim);margin-left:auto}
+
+/* filters */
+.filters{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;padding:20px 0}
+.f label{display:block;font:700 10px var(--mono);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
+.f input,.f select{width:100%;background:var(--panel);border:1px solid #2a3542;border-radius:3px;padding:7px 9px;font:400 11px var(--mono);color:var(--text)}
+.f input::placeholder{color:var(--dim)}
+.f select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#aab 50%),linear-gradient(135deg,#aab 50%,transparent 50%);background-position:calc(100% - 13px) 50%,calc(100% - 9px) 50%;background-size:4px 4px;background-repeat:no-repeat;padding-right:24px}
+.f.actions{display:flex;align-items:flex-end;gap:8px}
+
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);background:var(--panel);border:1px solid var(--line);border-radius:4px}
+.k{padding:14px 16px;border-right:1px solid var(--line);min-width:0}
+.k:last-child{border-right:0}
+.k .l{font:500 10px var(--mono);letter-spacing:1px;text-transform:uppercase;color:#cfd6dd}
+.k .v{font:700 32px/1.15 var(--mono);margin-top:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.k .s{font:400 11px var(--mono);color:#cfd6dd;margin-top:4px}
+.k .v .b{color:var(--blue)} .k .v .p{color:var(--purple)} .k .v .dim{color:var(--dim)}
+.k .v.small{font-size:18px;margin-top:16px}
+@media (max-width:760px){.kpis{grid-template-columns:1fr 1fr}.k:nth-child(2){border-right:0}.k:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+
+/* table */
+.tablewrap{overflow-x:auto;margin-top:0}
+table{width:100%;border-collapse:separate;border-spacing:0 5px;min-width:1100px}
+thead th{font:500 10px var(--mono);letter-spacing:.8px;text-transform:uppercase;color:#cfd6dd;text-align:left;padding:12px 10px 6px;white-space:nowrap;cursor:pointer;user-select:none}
+thead th.nosort{cursor:default}
+thead th .arr{color:var(--dim);margin-left:3px;font-size:9px}
+thead th.sorted{color:var(--green)} thead th.sorted .arr{color:var(--green)}
+tbody tr{background:var(--row)}
+tbody tr:hover{background:var(--row-hover)}
+tbody td{padding:13px 10px;white-space:nowrap;border-top:1px solid #161e28;border-bottom:1px solid #161e28}
+tbody td:first-child{border-left:3px solid var(--st,#2a3542);border-radius:3px 0 0 3px}
+tbody td:last-child{border-right:1px solid #161e28;border-radius:0 3px 3px 0}
+td.link a{color:var(--blue);text-decoration:none;font-weight:700}
+td.link a:hover{text-decoration:underline}
+td.num{font:400 12px var(--mono)}
+td.player{font-weight:700}
+td.set{color:#cfd6dd;max-width:380px;overflow:hidden;text-overflow:ellipsis}
+td.sportcell{box-shadow:inset 0 0 0 1px rgba(0,0,0,.18);background:var(--c);color:var(--t,#12161c);font:700 12px var(--sans);border-top-color:transparent;border-bottom-color:transparent;min-width:150px}
+td.sportcell .ic{margin-left:2px;font-size:14px;line-height:1}
+.legend{display:flex;flex-wrap:wrap;gap:6px;padding:0 0 16px}
+.chip{box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:3px;background:var(--c);color:var(--t,#12161c);font:700 11px var(--sans)}
+.chip b{font:700 10px var(--mono);opacity:.65}
+.sp{display:inline-block;padding:3px 9px;border-radius:3px;font:700 11px var(--sans);color:#0b0f14;background:var(--c,transparent)}
+.sp.none{color:#cfd6dd;background:transparent;border:1px solid #2a3542}
+.src{font:400 11px var(--mono);color:var(--muted)}
+.src.repack{color:var(--green);font-weight:700}
+.st{display:inline-block;max-width:130px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;padding:3px 10px;border-radius:999px;font:700 11px var(--sans);background:color-mix(in srgb,var(--st) 16%,transparent);color:var(--st)}
+.st.solid{background:var(--st);color:#12161c}
+.age{font:700 12px var(--mono)} .age small{font-size:9px;color:var(--dim);margin-left:1px}
+.age.warn{color:var(--amber)} .age.hot{color:var(--pink)}
+input[type=checkbox]{accent-color:var(--green);width:13px;height:13px;cursor:pointer}
+.empty{padding:70px 20px;text-align:center;color:var(--muted);font:400 12px var(--mono);line-height:1.8}
+.empty b{display:block;color:var(--text);font:700 15px var(--sans);margin-bottom:6px}
+.selbar{font:400 11px var(--mono);color:var(--muted)}
+.toast button{margin-left:10px;background:var(--green-ink);color:var(--green);border:0;border-radius:999px;padding:3px 10px;font:700 10px var(--mono);cursor:pointer}
+.restore{background:none;border:1px solid #2a3542;border-radius:3px;color:var(--amber);font:700 11px var(--sans);padding:3px 8px;cursor:pointer}
+.r,th.r{text-align:right}
+.dim{color:var(--dim)}
+.grade{font:700 12px var(--mono)}
+.bin{display:inline-block;padding:2px 7px;border:1px solid #2a3542;border-radius:3px;font:500 11px var(--mono);color:#cfd6dd}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--green);color:var(--green-ink);font:700 11px var(--mono);padding:9px 16px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{pointer-events:auto}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<header>
+  <img class="logo" alt="Precision Labeling" src="data:image/png;base64,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">
+  <div class="title">
+    <h1><span class="g">B</span>ottle<span class="g">N</span>eck</h1>
+    <p id="subtitle">Precision Labeling · card data queues · set vs card sport mismatches</p>
+  </div>
+  <button class="tz" id="tz" type="button"><span id="tzFlag">🇺🇸</span><span id="tzLabel">PACIFIC</span></button>
+</header>
+
+<nav class="sections" role="tablist" id="sections"></nav>
+
+<main>
+  <div class="bar">
+    <button class="pill on" id="enterBtn" type="button">Enter</button>
+    <button class="pill" id="autoBtn" type="button">Auto 60s</button>
+    <button class="pill" id="refreshBtn" type="button"><span class="spin" id="spin"></span>Refresh</button>
+    <span class="stamp" id="stamp"></span>
+  </div>
+  <section id="view"></section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- config ---------- */
+// Set questionId to the saved Metabase question for each tab. The page calls /api/metabase?q=<id>
+// (Vercel function using METABASE_HOST + METABASE_API_KEY). With no id, the tab shows sample data.
+const SECTIONS = [
+  { id:'mismatch', name:'Mis-match Set',      questionId:635 },
+  { id:'pending',  name:'Pending Data Issue', questionId:6310 },
+  { id:'support',  name:'Customer Support',   questionId:7527 },
+  // Hidden for now — re-add to show the tabs again:
+  // { id:'scan',   name:'Scan Queue',   questionId:null },
+  // { id:'rescan', name:'Rescan Queue', questionId:null },
+];
+// c = cell color, t = text color (defaults to dark)
+const SPORTS = {
+  baseball:          { c:'#4A90E2', i:'⚾', t:'#fff' },
+  basketball:        { c:'#F28C28', i:'🏀' },
+  football:          { c:'#8B5A2B', i:'🏈', t:'#fff' },
+  soccer:            { c:'#8FD3F4', i:'⚽' },
+  pokemon:           { c:'#FFD43B', i:'⚡' },
+  hockey:            { c:'#D63AAF', i:'🏒', t:'#fff' },
+  one_piece:         { c:'#111111', i:'☠️', t:'#fff' },
+  disney:            { c:'#8E5CC7', i:'🏰', t:'#fff' },
+  star_wars:         { c:'#D3D6DA', i:'🚀' },
+  marvel:            { c:'#D7263D', i:'🦸', t:'#fff' },
+  dc:                { c:'#1F3A93', i:'🦇', t:'#fff' },
+  wrestling:         { c:'#F5E6C8', i:'🤼' },
+  boxing:            { c:'#7A1F2B', i:'🥊', t:'#fff' },
+  combat:            { c:'#556B2F', i:'🥋', t:'#fff' },
+  ufc:               { c:'#0F766E', i:'🥋', t:'#fff' },
+  golf:              { c:'#2E8B57', i:'⛳', t:'#fff' },
+  tennis:            { c:'#DFFF4F', i:'🎾' },
+  racing:            { c:'#9E9E9E', i:'🏎️' },
+  volleyball:        { c:'#FFC8DD', i:'🏐' },
+  olympics:          { c:'#B8860B', i:'🏅', t:'#fff' },
+  multi_sport:       { c:'#7FFFD4', i:'🏆' },
+  dragon_ball:       { c:'#FFB3A7', i:'🐉' },
+  yugioh:            { c:'#C08497', i:'🃏' },
+  magic:             { c:'#4B0082', i:'🧙', t:'#fff' },
+  digimon:           { c:'#3DDC97', i:'👾' },
+  garbage_pail_kids: { c:'#84A98C', i:'🗑️' },
+  game_of_thrones:   { c:'#264653', i:'⚔️', t:'#fff' },
+  star_trek:         { c:'#FFD6A5', i:'🖖' },
+  metazoo:           { c:'#E9EDC9', i:'🦄' },
+  media:             { c:'#FF70A6', i:'🎬' },
+  other:             { c:'#FFFFFF', i:'❔' },
+};
+const SPORT_ALIASES = [ [/^dragon_ball/,'dragon_ball'], [/^yu.?gi.?oh/,'yugioh'], [/^garbage_pa/,'garbage_pail_kids'], [/^multi.?sport/,'multi_sport'], [/^star_?wars/,'star_wars'], [/^one_?piece/,'one_piece'], [/^magic/,'magic'], [/^pok[eé]mon/,'pokemon'] ];
+function sportKey(s){ const k=String(s||'').toLowerCase().trim().replace(/[\s-]+/g,'_'); if(SPORTS[k]) return k; for(const [re,v] of SPORT_ALIASES) if(re.test(k)) return v; return null; }
+const sportOf = s => SPORTS[sportKey(s)] || SPORTS.other;
+const ink = o => o.t || '#12161c';
+// Display order: these first, everything else A–Z after.
+const SPORT_ORDER = ['baseball','basketball','football','pokemon','one_piece'];
+const sportRank = s => { const k=sportKey(s)||norm(s), i=SPORT_ORDER.indexOf(k); return i<0 ? 100 : i; };
+const bySport = (a,b) => sportRank(a)-sportRank(b) || nice(a).localeCompare(nice(b));
+// Matches the PL Dashboard status pills. solid:true = filled pill with dark text.
+const STATUS = {
+  pending_scan:             { c:'#5EE08A' },
+  pending_rescan:           { c:'#FF5A5A' },
+  pending_grading:          { c:'#C77DFF' },
+  pending_assembly:         { c:'#2DD4BF' },
+  pending_slabbing:         { c:'#D07BE8' },
+  pending_release:          { c:'#F5A524' },
+  pending_rejection:        { c:'#FF4F8B' },
+  pending_customer_support: { c:'#8B7BFF' },
+  pending_data_issue:       { c:'#FF5A5A' },
+  vaulted:                  { c:'#3FB8FF' },
+};
+const statusOf = s => STATUS[norm(s)] || { c:'#8a96a3' };
+const titleCase = s => nice(s).replace(/\b\w/g, m=>m.toUpperCase());
+
+/* ---------- sample data (from Metabase screenshots) ---------- */
+const S = (set_sport,card_sport,player_name,set_name,grader_name,verified_date,source,card_status,id) =>
+  ({root_key:String(id),url:`https://admin.arenaclub.com/orders/0/cards/${id}`,set_sport,card_sport,player_name,set_name,grader_name,verified_date,source,card_status});
+const SAMPLE = [
+  S('baseball','basketball','Michael Jordan','Other 1991-92 Allan Kaye\'s Sports Cards News Magazine Standard-Size \'91','Ramoncito Lacaba','2026-09-26','non-repack','pending_slabbing',8812000),
+  S('baseball','basketball','Jonatan Clase','2022 Topps Heritage Minor League Real One Auto','Carmen Cortez','2026-09-26','repack','pending_slabbing',8811963),
+  S('football','basketball','Michael Jordan','Upper Deck 2023 Upper Deck Goodwin Champions Platinum','Steven John Ignacio','2026-09-25','repack','vaulted',8811926),
+  S('basketball','football','Trevor Lawrence','2021 Panini The National Vip','Donald Quinones','2026-09-25','non-repack','vaulted',8811889),
+  S('basketball','football','John Walsh','Classics 1995 Classic Five Sport Auto','Ian f','2026-09-25','non-repack','pending_release',8811852),
+  S('disney','star_wars','Fleet Transport','2025 Topps Disneyland 70th Anniversary \'54 On Wheels','Vince Alfred Fernandez','2026-09-25','non-repack','pending_slabbing',8811815),
+  S('football','basketball','Michael Jordan','2023 Skybox Metal Universe Champions','Joseph Anthony Somera','2026-09-24','repack','vaulted',8811778),
+  S('football','other','Chanesaw','Other 2026 Bo Jackson Battle Arena Tecmo Bowl Edition Tecmo News Battlefoil','Ramoncito Lacaba','2026-09-24','non-repack','pending_release',8811741),
+  S('baseball','basketball','Emmet Sheehan','2024 Topps Chrome','Calvin Caceres','2026-09-24','non-repack','vaulted',8811704),
+  S('basketball','football','Barry Sanders','Other 1991 Legends Sports Memorabilia','Marsen Lauren Hernandez','2026-09-24','repack','vaulted',8811667),
+  S('basketball','football','Brett Favre','2024 Panini The National Vip Gold Pack','Irish Gonzales','2026-09-24','non-repack','vaulted',8811630),
+  S('basketball','football','Philip Rivers','2019 Panini National Sports Collectors Convention Wrapper Redemption','Marsen Lauren Hernandez','2026-09-24','repack','vaulted',8811593),
+  S('baseball','other','Not Accepted','2025 Other Do Not Slab Aftermarket Auto','Kaity Paul','2026-09-24','non-repack','pending_customer_support',8811556),
+  S('disney','star_wars','Fleet Transport','2025 Topps Disneyland 70th Anniversary \'54 On Wheels','Jhon Ruzzel Gagaring','2026-09-23','non-repack','vaulted',8811519),
+  S('soccer','basketball','LeBron James','Other 2003-04 Firenze Campioni Di Futuro','Lean Joson','2026-09-23','non-repack','vaulted',8811482),
+  S('basketball','football','Christian McCaffrey','2017 Panini The National Vip','Benedict Bueno','2026-09-23','non-repack','vaulted',8811445),
+  S('football','multi_sport','Shohei Ohtani/Lionel Messi','2023 Leaf Special Release Exclusive Legends Edition','Calvin Caceres','2026-09-23','non-repack','pending_assembly',8811408),
+  S('football','basketball','Stephen Curry','2025 Panini National Convention Gold Packs Auto','John Paulo','2026-09-22','repack','vaulted',8811371),
+  S('basketball','football','Patrick Mahomes II','2017 Panini The National Vip Rookie','Laurence Dapon','2026-09-22','non-repack','vaulted',8811334),
+  S('football','baseball','Shohei Ohtani','2020 Panini Contenders','Carmen Cortez','2026-09-22','non-repack','vaulted',8811297),
+  S('football','baseball','Ken Griffey Jr.','2026 Panini Decades 90s Pop Culture','Camille Meneses','2026-09-22','non-repack','pending_release',8811260),
+  S('football','basketball','Luka Doncic','2019 Panini The National Vip','Calvin Caceres','2026-09-21','non-repack','vaulted',8811223),
+  S('disney','star_wars','Star Wars: Rise of the Resistance','2025 Topps Disneyland 70th Anniversary','One David Dizon','2026-09-21','non-repack','vaulted',8811186),
+  S('disney','star_wars','Fleet Transport','2025 Topps Disneyland 70th Anniversary \'54 On Wheels','One David Dizon','2026-09-19','non-repack','vaulted',8811149),
+  S('disney','star_wars','Fleet Transport','2025 Topps Disneyland 70th Anniversary \'54 On Wheels','Abraham Salisi','2026-09-19','non-repack','vaulted',8811112),
+  S('disney','star_wars','C-3PO','2025 Topps Disneyland 70th Anniversary 55\' Disneyland Icons','One David Dizon','2026-09-19','non-repack','vaulted',8811075),
+  S('disney','star_wars','Fleet Transport','2025 Topps Disneyland 70th Anniversary \'54 On Wheels','Kean Sta. Ana','2026-09-19','non-repack','vaulted',8811038),
+  S('football','baseball','Ken Griffey Jr.','2026 Panini Decades 90s Pop Culture','Abraham Salisi','2026-09-18','non-repack','pending_assembly',8811001),
+  S('baseball','other','Ray Confesses','Other 2019 Historic Autographs 1969','Benedict Bueno','2026-09-18','non-repack','pending_assembly',8810964),
+  S('football','soccer','Lionel Messi','2023 Leaf Web Exclusives Wins 1st Inter Miami Trophy','Adrian Carlo','2026-09-18','non-repack','pending_assembly',8810927),
+  S('pokemon','one_piece','Houndoom','2013 Pokemon B&W Jpn Megalo Cannon','Tyrone Jerome Moraleda','2026-09-18','non-repack','vaulted',8810890),
+  S('baseball','football','Jim Covert','2026 Leaf Sports Heroes Auto','Camille Meneses','2026-09-18','non-repack','pending_assembly',8810853),
+  S('football','basketball','Luka Doncic','2025 Panini National Convention Silver Packs National Insert','Laurence Dapon','2026-09-17','non-repack','vaulted',8810816),
+  S('disney','star_wars','Fleet Transport','2025 Topps Disneyland 70th Anniversary \'54 On Wheels','Michaela Cruz','2026-09-17','non-repack','vaulted',8810779),
+  S('disney','star_wars','Fleet Transport','2025 Topps Disneyland 70th Anniversary \'54 On Wheels','Ian f','2026-09-17','non-repack','vaulted',8810742),
+  S('football','multi_sport','Magic Johnson/Dan Marino/Mike Schmidt/Larry Bird','2025 Leaf Glory Of The Game The 7','One David Dizon','2026-09-17','non-repack','pending_assembly',8810705),
+  S('football','basketball','Chet Holmgren','2023 Panini Father\'s Day','John Paulo','2026-04-08','non-repack','vaulted',8531009),
+  S('football','pokemon','Ashton Jeanty','2025 Panini Absolute Hog Heaven','Lea Alan DeBruin','2026-04-08','non-repack','vaulted',8531044),
+  S('baseball','football','Corey Seager','2016 Topps Now','Laimer King De Guzman','2026-04-07','non-repack','vaulted',8529120),
+  S('basketball','baseball','Alex Rodriguez','Classics 1993 Classic Four Sport','Ramoncito Lacaba','2026-04-07','non-repack','vaulted',8529188),
+  S('basketball','baseball','Baylor Scheierman','2024-25 Panini Donruss Rated Rookie','Jordan Hunt','2026-04-06','non-repack','vaulted',8527761),
+  S('baseball','hockey','Wayne Gretzky','Topps 1991 Stadium Club Charter Member','Aaron Adrianne Joaquin','2026-04-01','repack','vaulted',8519002),
+  S('basketball','baseball','Tim Tebow','2017 Panini Father\'s Day Panini Collection','Ian Benedict Banua','2026-04-01','non-repack','vaulted',8519033),
+  S('disney','other','Mickey Mouse','Other 1956 Walt Disney Cartooning Card','Maher Calingasan','2026-03-31','non-repack','vaulted',8517210),
+  S('one_piece','other','Monkey D. Luffy','Other 2022 One Piece Jpn Paramount War','Kean Sta. Ana','2026-03-24','non-repack','vaulted',8503355),
+  S('basketball','football','Bo Nix','Other 2023 Sports Illustrated For Kids','Blaise Endico','2026-03-19','non-repack','vaulted',8494102),
+  S('baseball','wrestling','Steve Austin/Ric Flair/Goldberg','2025 Leaf Metal Happy Holidays Triple Auto','Emmanuel Queipo','2026-03-18','non-repack','vaulted',8492890),
+  S('basketball','hockey','Joe Thornton','Other 1996-97 Score Board All Sport Ppf','Mhike Joshua Mendoza','2026-03-13','non-repack','vaulted',8483311),
+  S('basketball','football','Diana Flores','2024 Leaf Metal Women Of Sport She Got Game','Ramoncito Lacaba','2026-03-12','non-repack','vaulted',8481004),
+  S('basketball','other','Amber Glenn','2025 Leaf Metal Women Of Sport Breaking Barriers','Laimer King De Guzman','2026-03-12','non-repack','vaulted',8481077),
+  S('baseball','basketball','Cade Cunningham','2022 Panini Father\'s Day','Benedict Bueno','2026-03-09','non-repack','vaulted',8476540),
+  S('baseball','hockey','Wayne Gretzky','Topps 1991 Stadium Club Charter Member','mark anthony quindoy','2026-03-06','non-repack','vaulted',8471220),
+  S('baseball','basketball','Luis Severino','2016 Panini National Treasures Rke.Mat.Sig.','nelzon litrero','2026-03-06','non-repack','vaulted',8471299),
+  S('basketball','baseball','Tyrese Maxey','2025-26 Topps Chrome','Jules Matthew Villanueva','2026-03-05','non-repack','vaulted',8469013),
+  S('football','baseball','Felnin Celesten','2022 Skybox Metal Universe Champions Multi-Sport','nelzon litrero','2026-03-03','non-repack','vaulted',8465120),
+  S('baseball','garbage_pail_kids','Hungry Henderson','2023 Topps Garbage Pail Kids X Mlb Series 3','Mhike Joshua Mendoza','2026-02-28','non-repack','vaulted',8459031),
+  S('football','basketball','Sophie Cunningham','2025 Panini National Convention Gold Packs','Calvin Caceres','2025-12-03','non-repack','vaulted',8290112),
+  S('baseball','football','Trevor Lawrence','2021 Leaf Flash Rookies','nelzon litrero','2025-12-03','non-repack','vaulted',8290150),
+  S('baseball','football','Oneil Cruz','2025 Topps City Connect Swch.Rlc.','Aaron Adrianne Joaquin','2025-11-29','non-repack','vaulted',8283009),
+  S('basketball','other','Dallas Seavey','Other 2023 Sportkings Volume 4 Single Mem.','Kean Sta. Ana','2025-11-27','non-repack','vaulted',8280014),
+  S('pokemon','basketball','Snover','2025 Pokemon Mega Evolution','One David Dizon','2025-11-26','non-repack','vaulted',8278810),
+  S('football','baseball','Travis Bazzana','2025 Panini National Convention Gold Packs','nelzon litrero','2025-11-25','non-repack','vaulted',8277001),
+  S('football','basketball','Shaquille O\'Neal','2025 Panini National Convention Gold Packs','nelzon litrero','2025-11-25','non-repack','vaulted',8277032),
+  S('football','basketball','Luka Doncic','2025 Panini National Convention Case Breaker','nelzon litrero','2025-11-25','non-repack','vaulted',8277070),
+  S('olympics','other','Kayla Harrison','2012 Topps U.S. Olympic Team And Olympic Hopefuls Games','Emmanuel Queipo','2025-11-15','non-repack','vaulted',8262219),
+  S('football','basketball','GG Jackson','2022-23 Bowman University Inception Auto','Rusty Khent Saludo','2025-11-13','non-repack','vaulted',8259980),
+  S('football','soccer','Bo Nix','2024 Panini Instant Nfl','nelzon litrero','2025-11-11','non-repack','vaulted',8257003),
+  S('baseball','other','Michael Phelps','2009 Topps Allen & Ginter','Ma. Julaila Castillo','2025-11-06','non-repack','vaulted',8250091),
+  S('wrestling','basketball','Tyrese Haliburton/Jalen Brunson','2025 Topps Now Wwe','Benedict Bueno','2025-11-04','non-repack','vaulted',8247700),
+  S('basketball','wrestling','Undertaker','2023 Panini The National Vip Gold Packs','Benedict Bueno','2025-11-01','non-repack','vaulted',8243118),
+  S('basketball','hockey','Mario Lemieux','2024 Leaf Anime Nation','Lean Joson','2025-10-29','non-repack','vaulted',8239011),
+  S('basketball','basketball','Michael Jordan','Upper Deck 1995 Upper Deck','Ian f','2025-10-28','non-repack','vaulted',8237720),
+].filter(r=>r.set_sport!==r.card_sport);
+
+const P = (ac8_number,cert_number,set_name,player_name,set_number,grade) =>
+  ({card_url:`https://admin.arenaclub.com/cards/${ac8_number}`,card_status:'pending_data_issue',ac8_number,cert_number,set_name,player_name,set_number,grade});
+const SAMPLE_PENDING = [
+  P('4088484','','2026 Donruss','Paul Skenes','JK-PS','9.5'),
+  P('3995935','121914834','2018-19 Panini Absolute Memorabilia','Stephen Curry','AA-SC','10'),
+  P('4163467','42157367','Ultimate Topps Living Set','Manny Machado','88','9'),
+  P('3838659','','1992-93 Upper Deck','Michael Jordan','AW9','7'),
+  P('3865929','','2026 One Piece','Crocodile','ST30-010 C','10'),
+  P('3865750','','2025 One Piece','Monkey.D.Luffy','OP10-118 SEC','9.5'),
+  P('4068245','','2026 One Piece','Nami','OP15-086 SR','9'),
+  P('3869462','','2025 Topps Chrome','Ashton Jeanty','322','7'),
+  P('4088486','','2026 Bowman','Jacob Misiorowski','35','8.5'),
+  P('3514709','6116872005','2020 Pokemon SWSH','Eevee V','SWSH065','9'),
+  P('3932467','','2025-26 Hoops','Nikola Jokic','290','9.5'),
+  P('3866344','','2023 One Piece','Gum-Gum Giant Sumo Slap','ST10-015 C','10'),
+  P('3991391','','2024 Star Wars: Unlimited','General Grievous','034','9'),
+  P('4016830','','2024 Star Wars: Unlimited','Kit Fisto','165','8'),
+  P('3039724','','1996-97 Topps Stadium Club','Kobe Bryant','R9','7'),
+  P('4088485','','2025-26 Topps Chrome Cosmic','Kon Knueppel','197','9.5'),
+  P('3986069','','2024 Star Wars: Unlimited','Admiral Trench','086','8.5'),
+  P('3757874','','1986-87 Fleer','Michael Jordan','57','1'),
+  P('3938186','155325408','2018 Topps Series 2','Shohei Ohtani','83-1','9'),
+  P('3869461','','2025 Topps Chrome Black','RJ Harvey','115','9'),
+  P('1926580','','1990 Topps','Ken Griffey, Jr.','336','8'),
+];
+const C = (order_number,full_name,raw,graded,total_cards,bins,pending_scan_cards) =>
+  ({url:`https://admin.arenaclub.com/orders/${order_number}`,order_number,status:'pending_customer_support',full_name,raw,graded,total_cards,bins,pending_scan_cards});
+const SAMPLE_SUPPORT = [
+  C('19028648','Shane Heirman',22,4,26,'#217',0),
+  C('19054584','Jerry Johnson',11,0,11,'#217',0),
+  C('19006797','William Bebeau',25,0,25,'#217',0),
+  C('18880647','Joe Michaels',25,0,25,'#217',0),
+  C('19360332','Bill Melchiori',15,35,50,'#217',0),
+  C('3541017','Arena Club',0,1,1,'',0),
+  C('7691078','Arena Club',0,1,1,'',0),
+  C('19277117','Gregory Carter',0,28,28,'#217; #279',27),
+  C('18689578','RICHARD MEDINA',0,33,33,'#217',32),
+  C('19649118','Eviltwin_Rook',7,0,7,'',0),
+  C('19395047','Shawn Harbaugh',8,8,16,'#217',15),
+  C('19677164','Nhan Truong',0,200,200,'',0),
+  C('19810802','Royce Wilkinson',0,2,2,'',0),
+  C('19859133','James Faulkner',0,1,1,'',0),
+];
+function keySupport(r){ r.root_key = 'support-'+String(r.order_number||r.url||'').replace(/[^\w-]/g,''); return r; }
+function keyPending(r){ r.root_key = 'pending-'+String(r.ac8_number||r.card_url||'').replace(/[^\w-]/g,''); return r; }
+
+/* ---------- state ---------- */
+const state = {
+  section:'mismatch', tz:'America/Los_Angeles', auto:null, loadedAt:new Date(),
+  rows:{ mismatch:SAMPLE, scan:[], rescan:[], pending:SAMPLE_PENDING.map(keyPending), support:SAMPLE_SUPPORT.map(keySupport) },
+  sortS:{ key:null, dir:'asc' },
+  sortP:{ key:null, dir:'asc' },
+  sort:{ key:'verified_date', dir:'desc' },
+  selected:new Set(),
+  clicked:new Set(), showClicked:false, clickStore:'local',
+  f:{ set_sport:'', card_sport:'', player:'', set_name:'', grader:'', from:'', to:'', source:'', status:'',
+       p_ac8:'', p_cert:'', p_set:'', p_player:'', p_setnum:'', p_grade:'', p_hascert:'',
+       s_order:'', s_name:'', s_bin:'', s_scan:'', s_mix:'' },
+};
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s||'').toLowerCase().trim().replace(/\s+/g,'_');
+const nice = s => String(s||'').replace(/_/g,' ');
+
+/* ---------- data ---------- */
+async function load(sectionId){
+  const sec = SECTIONS.find(s=>s.id===sectionId);
+  if(!sec.questionId) return;
+  try{
+    const r = await fetch(`/api/metabase?q=${sec.questionId}`);
+    if(!r.ok) throw new Error(r.status);
+    const data = await r.json();
+    state.rows[sectionId] = (Array.isArray(data)?data:data.rows||[]).map(o=>{
+      const x={}; for(const k in o) x[k.toLowerCase()]=o[k];
+      if(x.verified_date) x.verified_date=String(x.verified_date).slice(0,10);
+      if(sectionId==='pending') keyPending(x);
+      if(sectionId==='support') keySupport(x);
+      return x;
+    });
+  }catch(e){ toast(`Couldn't load question ${sec.questionId} — showing sample data`); }
+}
+async function refresh(){
+  $('#spin').classList.add('go');
+  await Promise.all([load(state.section), loadClicked()]);
+  state.loadedAt = new Date();
+  setTimeout(()=>{ $('#spin').classList.remove('go'); render(); },350);
+}
+
+/* ---------- clicked cards (hide once opened) ---------- */
+const LS_KEY='pl_mismatch_clicked';
+function lsGet(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch(e){ return []; } }
+function lsSet(){ try{ localStorage.setItem(LS_KEY,JSON.stringify([...state.clicked])); }catch(e){} }
+async function loadClicked(){
+  try{
+    const r=await fetch('/api/clicked'); if(!r.ok) throw 0;
+    const d=await r.json(); state.clicked=new Set((d.keys||[]).map(String)); state.clickStore='shared';
+  }catch(e){ state.clicked=new Set(lsGet()); state.clickStore='local'; }
+}
+async function markClicked(key,on=true){
+  on?state.clicked.add(key):state.clicked.delete(key); state.selected.delete(key); lsSet();
+  if(state.clickStore!=='shared') return;
+  try{ await fetch('/api/clicked',{method:on?'POST':'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({root_key:key,section:'mismatch'})}); }
+  catch(e){ toast("Couldn't save — it may reappear on refresh"); }
+}
+function undoToast(key,name){
+  const t=$('#toast'); t.innerHTML=`Opened ${esc(name)} — removed from list <button type="button" id="undo" data-key="${esc(key)}">Undo</button>`;
+  t.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('show'),6000);
+}
+
+/* ---------- helpers ---------- */
+function todayISO(){ return new Intl.DateTimeFormat('en-CA',{timeZone:state.tz}).format(new Date()); }
+function daysSince(iso){ if(!iso) return null; return Math.round((new Date(todayISO())-new Date(iso))/864e5); }
+function fmtDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function sportCell(s){ const o=sportOf(s); return `<td class="sportcell" style="--c:${o.c};--t:${ink(o)}">${esc(nice(s))} <span class="ic" aria-hidden="true">${o.i}</span></td>`; }
+function uniq(rows,k){ return [...new Set(rows.map(r=>r[k]).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b))); }
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('show'),2200); }
+
+function filtered(){
+  const f=state.f, has=(v,q)=>String(v||'').toLowerCase().includes(q.toLowerCase());
+  let rows = state.rows.mismatch.filter(r=>
+    (state.showClicked ? state.clicked.has(r.root_key) : !state.clicked.has(r.root_key)) &&
+    (!f.set_sport || r.set_sport===f.set_sport) &&
+    (!f.card_sport|| r.card_sport===f.card_sport) &&
+    (!f.player    || has(r.player_name,f.player)) &&
+    (!f.set_name  || has(r.set_name,f.set_name)) &&
+    (!f.grader    || r.grader_name===f.grader) &&
+    (!f.from      || (r.verified_date && r.verified_date>=f.from)) &&
+    (!f.to        || (r.verified_date && r.verified_date<=f.to)) &&
+    (!f.source    || r.source===f.source) &&
+    (!f.status    || r.card_status===f.status));
+  const {key,dir}=state.sort, m=dir==='asc'?1:-1;
+  rows.sort((a,b)=>{
+    let x=a[key],y=b[key];
+    if(key==='age'){ x=daysSince(a.verified_date)??-1; y=daysSince(b.verified_date)??-1; return (x-y)*m; }
+    return String(x??'').localeCompare(String(y??''),undefined,{numeric:true})*m;
+  });
+  return rows;
+}
+
+/* ---------- render ---------- */
+function currentRows(){ return state.section==='pending' ? filteredPending() : state.section==='support' ? filteredSupport() : filtered(); }
+function renderTabs(){
+  $('#sections').innerHTML = SECTIONS.map(s=>{
+    const n = state.rows[s.id].filter(r=>!state.clicked.has(r.root_key)).length;
+    return `<button role="tab" aria-selected="${s.id===state.section}" data-sec="${s.id}">${esc(s.name)}<span class="ct">${n||''}</span></button>`;
+  }).join('');
+}
+function render(){
+  renderTabs();
+  const time = new Intl.DateTimeFormat('en-US',{timeZone:state.tz,hour:'numeric',minute:'2-digit'}).format(state.loadedAt);
+  $('#stamp').textContent = `updated ${time} ${state.tz.includes('Manila')?'PHT':'PT'}`;
+  if(state.section==='mismatch') renderMismatch();
+  else if(state.section==='pending') renderPending();
+  else if(state.section==='support') renderSupport();
+  else renderPlaceholder();
+}
+function filteredPending(){
+  const f=state.f, has=(v,q)=>String(v||'').toLowerCase().includes(q.toLowerCase().trim());
+  let rows=state.rows.pending.filter(r=>
+    (state.showClicked ? state.clicked.has(r.root_key) : !state.clicked.has(r.root_key)) &&
+    (!f.p_ac8    || has(r.ac8_number,f.p_ac8)) &&
+    (!f.p_cert   || has(r.cert_number,f.p_cert)) &&
+    (!f.p_set    || has(r.set_name,f.p_set)) &&
+    (!f.p_player || has(r.player_name,f.p_player)) &&
+    (!f.p_setnum || has(r.set_number,f.p_setnum)) &&
+    (!f.p_grade  || String(r.grade)===f.p_grade) &&
+    (!f.p_hascert || (f.p_hascert==='yes' ? !!r.cert_number : !r.cert_number)));
+  const {key,dir}=state.sortP, m=dir==='asc'?1:-1;
+  if(key) rows=[...rows].sort((a,b)=>{
+    if(key==='grade'||key==='ac8_number') return ((parseFloat(a[key])||0)-(parseFloat(b[key])||0))*m;
+    return String(a[key]??'').localeCompare(String(b[key]??''),undefined,{numeric:true})*m;
+  });
+  return rows;
+}
+function renderPending(){
+  $('#subtitle').textContent='Precision Labeling · card data queues · cards held for a data issue';
+  const all=state.rows.pending, rows=filteredPending(), f=state.f;
+  const openAll=all.filter(r=>!state.clicked.has(r.root_key)), clickedTotal=all.length-openAll.length;
+  const withCert=rows.filter(r=>r.cert_number).length;
+  const grades=[...new Set(all.map(r=>String(r.grade??'')).filter(Boolean))].sort((a,b)=>parseFloat(b)-parseFloat(a));
+  const tens=rows.filter(r=>parseFloat(r.grade)>=10).length;
+  const sets={}; rows.forEach(r=>{ if(r.set_name) sets[r.set_name]=(sets[r.set_name]||0)+1; });
+  const topSet=Object.entries(sets).sort((a,b)=>b[1]-a[1])[0];
+  const sel=[...state.selected].filter(id=>rows.some(r=>r.root_key===id));
+  const cols=[['',''],['card_url',''],['card_status','Card status'],['ac8_number','AC8 number'],['cert_number','Cert number'],['set_name','Set name'],['player_name','Player'],['set_number','Set number'],['grade','Grade']];
+  const S=state.sortP;
+  $('#view').innerHTML=`
+  <div class="filters">
+    <div class="f"><label for="p_ac8">AC8 number</label><input id="p_ac8" data-f="p_ac8" inputmode="numeric" placeholder="e.g. 4088484" value="${esc(f.p_ac8)}"></div>
+    <div class="f"><label for="p_cert">Cert number</label><input id="p_cert" data-f="p_cert" placeholder="e.g. 121914834" value="${esc(f.p_cert)}"></div>
+    <div class="f"><label for="p_set">Set name</label><input id="p_set" data-f="p_set" placeholder="e.g. One Piece" value="${esc(f.p_set)}"></div>
+    <div class="f"><label for="p_player">Player</label><input id="p_player" data-f="p_player" placeholder="e.g. Jordan" value="${esc(f.p_player)}"></div>
+    <div class="f"><label for="p_setnum">Set number</label><input id="p_setnum" data-f="p_setnum" placeholder="e.g. OP10-118" value="${esc(f.p_setnum)}"></div>
+    <div class="f"><label for="p_grade">Grade</label><select id="p_grade" data-f="p_grade"><option value="">All</option>${grades.map(g=>`<option${g===f.p_grade?' selected':''}>${esc(g)}</option>`).join('')}</select></div>
+    <div class="f"><label for="p_hascert">Cert</label><select id="p_hascert" data-f="p_hascert"><option value="">All</option><option value="yes"${f.p_hascert==='yes'?' selected':''}>Has cert</option><option value="no"${f.p_hascert==='no'?' selected':''}>No cert</option></select></div>
+    <div class="f actions"><button class="pill" id="clear" type="button">Clear filters</button></div>
+  </div>
+
+  <div class="kpis">
+    <div class="k"><div class="l">${state.showClicked?'Opened':'Open data issues'}</div><div class="v">${rows.length.toLocaleString()}</div><div class="s">${state.showClicked?'already opened':(rows.length===openAll.length?'open':'of '+openAll.length+' open · filtered')}</div></div>
+    <div class="k"><div class="l">Has cert / No cert</div><div class="v"><span style="color:var(--green)">${withCert}</span> <span class="dim">/</span> <span style="color:var(--muted)">${rows.length-withCert}</span></div><div class="s">cards</div></div>
+    <div class="k"><div class="l">Grade 10s</div><div class="v">${tens}</div><div class="s">cards graded 10</div></div>
+    <div class="k"><div class="l">Top set</div><div class="v small">${topSet?esc(topSet[0]):'—'}</div><div class="s">${topSet?topSet[1]+' cards':'no cards'}</div></div>
+  </div>
+
+  <div class="bar" style="border:0;padding:14px 0 0">
+    <span class="selbar">${sel.length} selected</span>
+    <button class="pill" id="copyUrls" type="button" ${sel.length?'':'disabled'}>Copy URLs</button>
+    <button class="pill" id="csv" type="button" ${rows.length?'':'disabled'}>Export CSV</button>
+    <button class="pill ${state.showClicked?'on':''}" id="showClicked" type="button">${state.showClicked?'Back to open cards':'Opened ('+clickedTotal+')'}</button>
+    <span class="selbar">${state.clickStore==='shared'?'● shared with team':'○ this browser only'}</span>
+  </div>
+
+  <div class="tablewrap">
+  ${rows.length?`<table>
+    <thead><tr>${cols.map(([k,l])=>{
+      if(k==='') return `<th class="nosort"><input type="checkbox" id="selAll" aria-label="Select all" ${sel.length&&sel.length===rows.length?'checked':''}></th>`;
+      if(k==='card_url') return `<th class="nosort">URL</th>`;
+      const on=S.key===k, num=k==='grade'||k==='ac8_number';
+      return `<th data-sort="${k}" class="${on?'sorted':''}${num?' r':''}">${l}<span class="arr">${on?(S.dir==='asc'?'▲':'▼'):'↕'}</span></th>`;
+    }).join('')}</tr></thead>
+    <tbody>${rows.map(r=>{
+      const so=statusOf(r.card_status), g=parseFloat(r.grade);
+      return `<tr style="--st:${so.c}">
+        <td><input type="checkbox" data-id="${esc(r.root_key)}" aria-label="Select card ${esc(r.ac8_number)}" ${state.selected.has(r.root_key)?'checked':''}></td>
+        <td class="link">${state.showClicked
+          ? `<button type="button" class="restore" data-restore="${esc(r.root_key)}">Put back</button>`
+          : `<a href="${esc(r.card_url)}" target="_blank" rel="noopener" data-open="${esc(r.root_key)}" data-name="${esc(r.player_name)}">Click Me</a>`}</td>
+        <td><span class="st" title="${esc(titleCase(r.card_status))}">${esc(titleCase(r.card_status))}</span></td>
+        <td class="num r">${esc(r.ac8_number)}</td>
+        <td class="num">${r.cert_number?esc(r.cert_number):'<span class="dim">—</span>'}</td>
+        <td class="set" title="${esc(r.set_name)}">${esc(r.set_name)}</td>
+        <td class="player">${esc(r.player_name)}</td>
+        <td class="num">${esc(r.set_number)}</td>
+        <td class="num r"><span class="grade${g>=10?' ten':''}">${esc(r.grade)}</span></td>
+      </tr>`;}).join('')}</tbody>
+  </table>`:`<div class="empty"><b>${state.showClicked?'No opened cards yet':'No cards match these filters'}</b>${state.showClicked?'Cards you open move here.':'Clear a filter to see more cards.'}</div>`}
+  </div>`;
+}
+const binsOf = r => String(r.bins||'').split(/[;,]/).map(s=>s.trim()).filter(Boolean);
+const numOf = v => Number(v)||0;
+function filteredSupport(){
+  const f=state.f, has=(v,q)=>String(v||'').toLowerCase().includes(q.toLowerCase().trim());
+  let rows=state.rows.support.filter(r=>
+    (state.showClicked ? state.clicked.has(r.root_key) : !state.clicked.has(r.root_key)) &&
+    (!f.s_order || has(r.order_number,f.s_order)) &&
+    (!f.s_name  || has(r.full_name,f.s_name)) &&
+    (!f.s_bin   || (f.s_bin==='none' ? !binsOf(r).length : binsOf(r).includes(f.s_bin))) &&
+    (!f.s_scan  || (f.s_scan==='yes' ? numOf(r.pending_scan_cards)>0 : numOf(r.pending_scan_cards)===0)) &&
+    (!f.s_mix   || (f.s_mix==='raw' ? numOf(r.raw)>0 && numOf(r.graded)===0 : f.s_mix==='graded' ? numOf(r.graded)>0 && numOf(r.raw)===0 : numOf(r.raw)>0 && numOf(r.graded)>0)));
+  const {key,dir}=state.sortS, m=dir==='asc'?1:-1;
+  const nums=['order_number','raw','graded','total_cards','pending_scan_cards'];
+  if(key) rows=[...rows].sort((a,b)=> nums.includes(key) ? (numOf(a[key])-numOf(b[key]))*m
+                                    : String(a[key]??'').localeCompare(String(b[key]??''),undefined,{numeric:true})*m);
+  return rows;
+}
+function renderSupport(){
+  $('#subtitle').textContent='Precision Labeling · card data queues · orders waiting on customer support';
+  const all=state.rows.support, rows=filteredSupport(), f=state.f;
+  const openAll=all.filter(r=>!state.clicked.has(r.root_key)), clickedTotal=all.length-openAll.length;
+  const sum=k=>rows.reduce((t,r)=>t+numOf(r[k]),0);
+  const bins=[...new Set(all.flatMap(binsOf))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  const scanOrders=rows.filter(r=>numOf(r.pending_scan_cards)>0).length;
+  const sel=[...state.selected].filter(id=>rows.some(r=>r.root_key===id));
+  const cols=[['',''],['url',''],['order_number','Order number','r'],['status','Status'],['full_name','Customer'],['raw','Raw','r'],['graded','Graded','r'],['total_cards','Total cards','r'],['bins','Bins'],['pending_scan_cards','Pending scan','r']];
+  const S=state.sortS;
+  $('#view').innerHTML=`
+  <div class="filters">
+    <div class="f"><label for="s_order">Order number</label><input id="s_order" data-f="s_order" inputmode="numeric" placeholder="e.g. 19028648" value="${esc(f.s_order)}"></div>
+    <div class="f"><label for="s_name">Customer</label><input id="s_name" data-f="s_name" placeholder="e.g. Heirman" value="${esc(f.s_name)}"></div>
+    <div class="f"><label for="s_bin">Bin</label><select id="s_bin" data-f="s_bin"><option value="">All</option>${bins.map(b=>`<option value="${esc(b)}"${b===f.s_bin?' selected':''}>${esc(b)}</option>`).join('')}<option value="none"${f.s_bin==='none'?' selected':''}>No bin</option></select></div>
+    <div class="f"><label for="s_mix">Cards</label><select id="s_mix" data-f="s_mix"><option value="">All</option><option value="raw"${f.s_mix==='raw'?' selected':''}>Raw only</option><option value="graded"${f.s_mix==='graded'?' selected':''}>Graded only</option><option value="both"${f.s_mix==='both'?' selected':''}>Raw + graded</option></select></div>
+    <div class="f"><label for="s_scan">Pending scan</label><select id="s_scan" data-f="s_scan"><option value="">All</option><option value="yes"${f.s_scan==='yes'?' selected':''}>Has pending scan</option><option value="no"${f.s_scan==='no'?' selected':''}>None pending</option></select></div>
+    <div class="f actions"><button class="pill" id="clear" type="button">Clear filters</button></div>
+  </div>
+
+  <div class="kpis">
+    <div class="k"><div class="l">${state.showClicked?'Opened':'Open orders'}</div><div class="v">${rows.length.toLocaleString()}</div><div class="s">${state.showClicked?'already opened':(rows.length===openAll.length?'open':'of '+openAll.length+' open · filtered')}</div></div>
+    <div class="k"><div class="l">Total cards</div><div class="v">${sum('total_cards').toLocaleString()}</div><div class="s">across these orders</div></div>
+    <div class="k"><div class="l">Raw / Graded</div><div class="v"><span class="b">${sum('raw').toLocaleString()}</span> <span class="dim">/</span> <span class="p">${sum('graded').toLocaleString()}</span></div><div class="s">cards</div></div>
+    <div class="k"><div class="l">Pending scan</div><div class="v" style="color:${sum('pending_scan_cards')?'var(--amber)':'inherit'}">${sum('pending_scan_cards').toLocaleString()}</div><div class="s">cards in ${scanOrders} order${scanOrders===1?'':'s'}</div></div>
+  </div>
+
+  <div class="bar" style="border:0;padding:14px 0 0">
+    <span class="selbar">${sel.length} selected</span>
+    <button class="pill" id="copyUrls" type="button" ${sel.length?'':'disabled'}>Copy URLs</button>
+    <button class="pill" id="csv" type="button" ${rows.length?'':'disabled'}>Export CSV</button>
+    <button class="pill ${state.showClicked?'on':''}" id="showClicked" type="button">${state.showClicked?'Back to open orders':'Opened ('+clickedTotal+')'}</button>
+    <span class="selbar">${state.clickStore==='shared'?'● shared with team':'○ this browser only'}</span>
+  </div>
+
+  <div class="tablewrap">
+  ${rows.length?`<table>
+    <thead><tr>${cols.map(([k,l,al])=>{
+      if(k==='') return `<th class="nosort"><input type="checkbox" id="selAll" aria-label="Select all" ${sel.length&&sel.length===rows.length?'checked':''}></th>`;
+      if(k==='url') return `<th class="nosort">URL</th>`;
+      const on=S.key===k;
+      return `<th data-sort="${k}" class="${on?'sorted':''}${al?' r':''}">${l}<span class="arr">${on?(S.dir==='asc'?'▲':'▼'):'↕'}</span></th>`;
+    }).join('')}</tr></thead>
+    <tbody>${rows.map(r=>{
+      const so=statusOf(r.status), ps=numOf(r.pending_scan_cards), b=binsOf(r);
+      return `<tr style="--st:${so.c}">
+        <td><input type="checkbox" data-id="${esc(r.root_key)}" aria-label="Select order ${esc(r.order_number)}" ${state.selected.has(r.root_key)?'checked':''}></td>
+        <td class="link">${state.showClicked
+          ? `<button type="button" class="restore" data-restore="${esc(r.root_key)}">Put back</button>`
+          : `<a href="${esc(r.url)}" target="_blank" rel="noopener" data-open="${esc(r.root_key)}" data-name="order ${esc(r.order_number)}">Click Me</a>`}</td>
+        <td class="num r">${esc(r.order_number)}</td>
+        <td><span class="st" title="${esc(titleCase(r.status))}">${esc(titleCase(r.status))}</span></td>
+        <td class="player">${esc(r.full_name)}</td>
+        <td class="num r" style="color:${numOf(r.raw)?'var(--blue)':'var(--dim)'}">${numOf(r.raw)}</td>
+        <td class="num r" style="color:${numOf(r.graded)?'var(--purple)':'var(--dim)'}">${numOf(r.graded)}</td>
+        <td class="num r"><b>${numOf(r.total_cards)}</b></td>
+        <td>${b.length?b.map(x=>`<span class="bin">${esc(x)}</span>`).join(' '):'<span class="dim">—</span>'}</td>
+        <td class="num r" style="color:${ps?'var(--amber)':'var(--dim)'};font-weight:${ps?700:400}">${ps}</td>
+      </tr>`;}).join('')}</tbody>
+  </table>`:`<div class="empty"><b>${state.showClicked?'No opened orders yet':'No orders match these filters'}</b>${state.showClicked?'Orders you open move here.':'Clear a filter to see more orders.'}</div>`}
+  </div>`;
+}
+function renderPlaceholder(){
+  const sec=SECTIONS.find(s=>s.id===state.section);
+  $('#subtitle').textContent=`Precision Labeling · card data queues · ${sec.name.toLowerCase()}`;
+  $('#view').innerHTML=`<div class="empty"><b>${esc(sec.name)} isn't connected yet</b>Set its Metabase question ID in SECTIONS to load cards here.</div>`;
+}
+function renderMismatch(){
+  $('#subtitle').textContent='Precision Labeling · card data queues · set vs card sport mismatches';
+  const all=state.rows.mismatch, rows=filtered(), f=state.f;
+  const openTotal=all.filter(r=>!state.clicked.has(r.root_key)).length, clickedTotal=all.filter(r=>state.clicked.has(r.root_key)).length;
+  const sfmt=v=>`${nice(v)} ${sportOf(v).i}`;
+  const opt=(k,label,cur,fmt=nice)=>`<option value="">All</option>`+(k.endsWith('sport')?uniq(all,k).sort(bySport):uniq(all,k)).map(v=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(fmt(v))}</option>`).join('');
+  const repack=rows.filter(r=>r.source==='repack').length;
+  const pairs={}; rows.forEach(r=>{const p=`${nice(r.set_sport)} ${sportOf(r.set_sport).i} → ${nice(r.card_sport)} ${sportOf(r.card_sport).i}`; pairs[p]=(pairs[p]||0)+1;});
+  const top=Object.entries(pairs).sort((a,b)=>b[1]-a[1])[0];
+  const today=todayISO(); const todayCt=rows.filter(r=>r.verified_date===today).length;
+  const sel=[...state.selected].filter(id=>rows.some(r=>r.root_key===id));
+  const cols=[['','nosort'],['url','nosort'],['set_sport','Set sport'],['card_sport','Card sport'],['player_name','Player'],['grader_name','Grader'],['verified_date','Verified'],['age','Age'],['source','Source'],['card_status','Status'],['set_name','Set name']];
+
+  $('#view').innerHTML = `
+  <div class="filters">
+    <div class="f"><label for="f_set">Set sport</label><select id="f_set" data-f="set_sport">${opt('set_sport','',f.set_sport,sfmt)}</select></div>
+    <div class="f"><label for="f_card">Card sport</label><select id="f_card" data-f="card_sport">${opt('card_sport','',f.card_sport,sfmt)}</select></div>
+    <div class="f"><label for="f_player">Player</label><input id="f_player" data-f="player" placeholder="e.g. Jordan" value="${esc(f.player)}"></div>
+    <div class="f"><label for="f_setname">Set name</label><input id="f_setname" data-f="set_name" placeholder="e.g. Topps Chrome" value="${esc(f.set_name)}"></div>
+    <div class="f"><label for="f_grader">Grader</label><select id="f_grader" data-f="grader">${opt('grader_name','',f.grader,v=>v)}</select></div>
+    <div class="f"><label for="f_from">Verified from</label><input id="f_from" type="date" data-f="from" value="${f.from}"></div>
+    <div class="f"><label for="f_to">Verified to</label><input id="f_to" type="date" data-f="to" value="${f.to}"></div>
+    <div class="f"><label for="f_src">Source</label><select id="f_src" data-f="source">${opt('source','',f.source,v=>v)}</select></div>
+    <div class="f"><label for="f_st">Status</label><select id="f_st" data-f="status">${opt('card_status','',f.status,titleCase)}</select></div>
+    <div class="f actions"><button class="pill" id="clear" type="button">Clear filters</button></div>
+  </div>
+
+  <div class="legend">${[...new Set(all.flatMap(r=>[r.set_sport,r.card_sport]).map(sportKey).filter(Boolean))].sort(bySport).map(k=>{
+      const o=SPORTS[k], n=rows.filter(r=>sportKey(r.set_sport)===k||sportKey(r.card_sport)===k).length;
+      return `<span class="chip" style="--c:${o.c};--t:${ink(o)}">${esc(nice(k))} <span aria-hidden="true">${o.i}</span><b>${n}</b></span>`;}).join('')}</div>
+
+  <div class="kpis">
+    <div class="k"><div class="l">${state.showClicked?'Opened':'Open mismatches'}</div><div class="v">${rows.length.toLocaleString()}</div><div class="s">${state.showClicked?'already opened':(rows.length===openTotal?'open':'of '+openTotal.toLocaleString()+' open · filtered')}</div></div>
+    <div class="k"><div class="l">Verified today</div><div class="v">${todayCt}</div><div class="s">${fmtDate(today)}</div></div>
+    <div class="k"><div class="l">Repack / Non-repack</div><div class="v"><span style="color:var(--green)">${repack}</span> <span class="dim">/</span> <span style="color:var(--muted)">${rows.length-repack}</span></div><div class="s">cards</div></div>
+    <div class="k"><div class="l">Top pair</div><div class="v small">${top?esc(top[0]):'—'}</div><div class="s">${top?top[1]+' cards':'no cards'}</div></div>
+  </div>
+
+  <div class="bar" style="border:0;padding:14px 0 0">
+    <span class="selbar">${sel.length} selected</span>
+    <button class="pill" id="copyUrls" type="button" ${sel.length?'':'disabled'}>Copy URLs</button>
+    <button class="pill" id="csv" type="button" ${rows.length?'':'disabled'}>Export CSV</button>
+    <button class="pill ${state.showClicked?'on':''}" id="showClicked" type="button">${state.showClicked?'Back to open cards':'Opened ('+clickedTotal+')'}</button>
+    <span class="selbar" title="${state.clickStore==='shared'?'Saved for everyone':'Saved in this browser only'}">${state.clickStore==='shared'?'● shared with team':'○ this browser only'}</span>
+  </div>
+
+  <div class="tablewrap">
+  ${rows.length?`<table>
+    <thead><tr>${cols.map(([k,l])=>{
+      if(k==='') return `<th class="nosort"><input type="checkbox" id="selAll" aria-label="Select all" ${sel.length&&sel.length===rows.length?'checked':''}></th>`;
+      if(k==='url') return `<th class="nosort">URL</th>`;
+      const on=state.sort.key===k; return `<th data-sort="${k}" class="${on?'sorted':''}">${l}<span class="arr">${on?(state.sort.dir==='asc'?'▲':'▼'):'↕'}</span></th>`;
+    }).join('')}</tr></thead>
+    <tbody>${rows.map(r=>{
+      const so=statusOf(r.card_status), sc=so.c, d=daysSince(r.verified_date);
+      return `<tr style="--st:${sc}">
+        <td><input type="checkbox" data-id="${esc(r.root_key)}" aria-label="Select card ${esc(r.root_key)}" ${state.selected.has(r.root_key)?'checked':''}></td>
+        <td class="link">${state.showClicked
+          ? `<button type="button" class="restore" data-restore="${esc(r.root_key)}">Put back</button>`
+          : `<a href="${esc(r.url)}" target="_blank" rel="noopener" data-open="${esc(r.root_key)}" data-name="${esc(r.player_name)}">Click Me</a>`}</td>
+        ${sportCell(r.set_sport)}
+        ${sportCell(r.card_sport)}
+        <td class="player">${esc(r.player_name)}</td>
+        <td>${esc(r.grader_name||'—')}</td>
+        <td class="num">${fmtDate(r.verified_date)}</td>
+        <td><span class="age ${d>=30?'hot':d>=7?'warn':''}">${d??'—'}<small>d</small></span></td>
+        <td><span class="src ${r.source==='repack'?'repack':''}">${esc(r.source)}</span></td>
+        <td><span class="st${so.solid?' solid':''}" title="${esc(titleCase(r.card_status))}">${esc(titleCase(r.card_status))}</span></td>
+        <td class="set" title="${esc(r.set_name)}">${esc(r.set_name)}</td>
+      </tr>`;}).join('')}</tbody>
+  </table>`:`<div class="empty"><b>No cards match these filters</b>Clear a filter or widen the verified date range.</div>`}
+  </div>`;
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  const a=e.target.closest('a[data-open]');
+  if(a){ e.preventDefault(); window.open(a.href,'_blank','noopener'); const k=a.dataset.open; markClicked(k); render(); undoToast(k,a.dataset.name||'card'); return; }
+  const u=e.target.closest('#undo');
+  if(u){ markClicked(u.dataset.key,false); $('#toast').classList.remove('show'); render(); return; }
+  const rb=e.target.closest('[data-restore]');
+  if(rb){ markClicked(rb.dataset.restore,false); render(); toast('Put back in the open list'); return; }
+  if(e.target.closest('#showClicked')){ state.showClicked=!state.showClicked; state.selected.clear(); render(); return; }
+  const t=e.target.closest('[data-sec],[data-sort],#clear,#copyUrls,#csv,#tz,#autoBtn,#refreshBtn,#enterBtn');
+  if(!t) return;
+  if(t.dataset.sec){ state.section=t.dataset.sec; state.selected.clear(); load(state.section).then(render); render(); }
+  else if(t.dataset.sort){ const k=t.dataset.sort, sk={pending:'sortP',support:'sortS'}[state.section]||'sort', cur=state[sk]; state[sk] = cur.key===k?{key:k,dir:cur.dir==='asc'?'desc':'asc'}:{key:k,dir:['verified_date','age','grade','raw','graded','total_cards','pending_scan_cards'].includes(k)?'desc':'asc'}; render(); }
+  else if(t.id==='clear'){ const pre={pending:'p_',support:'s_'}[state.section]; for(const k in state.f) if(pre ? k.startsWith(pre) : !/^[ps]_/.test(k)) state.f[k]=''; render(); }
+  else if(t.id==='copyUrls'){ const urls=currentRows().filter(r=>state.selected.has(r.root_key)).map(r=>r.url||r.card_url).join('\n'); navigator.clipboard?.writeText(urls).then(()=>toast('Copied '+urls.split('\n').length+' URLs'),()=>toast('Copy failed — clipboard blocked')); }
+  else if(t.id==='csv'){ exportCsv(); }
+  else if(t.id==='tz'){ const m=state.tz==='America/Los_Angeles'; state.tz=m?'Asia/Manila':'America/Los_Angeles'; $('#tz').classList.toggle('manila',m); $('#tzFlag').textContent=m?'🇵🇭':'🇺🇸'; $('#tzLabel').textContent=m?'MANILA':'PACIFIC'; render(); }
+  else if(t.id==='autoBtn'){ if(state.auto){clearInterval(state.auto);state.auto=null;t.classList.remove('on');} else {state.auto=setInterval(refresh,60000);t.classList.add('on');toast('Auto refresh every 60s');} }
+  else if(t.id==='refreshBtn'){ refresh(); }
+  else if(t.id==='enterBtn'){ refresh(); }
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.id==='selAll'){ currentRows().forEach(r=>t.checked?state.selected.add(r.root_key):state.selected.delete(r.root_key)); render(); return; }
+  if(t.dataset.id){ t.checked?state.selected.add(t.dataset.id):state.selected.delete(t.dataset.id); render(); return; }
+  if(t.dataset.f && t.tagName!=='INPUT' || t.type==='date'){ state.f[t.dataset.f]=t.value; render(); }
+});
+document.addEventListener('auxclick',e=>{ const a=e.target.closest('a[data-open]'); if(a&&e.button===1){ markClicked(a.dataset.open); setTimeout(render,0); } });
+let deb;
+document.addEventListener('input',e=>{
+  const t=e.target; if(!t.dataset.f||t.tagName!=='INPUT'||t.type==='date') return;
+  clearTimeout(deb); deb=setTimeout(()=>{ state.f[t.dataset.f]=t.value; const id=t.id,pos=t.selectionStart; render(); const n=document.getElementById(id); n.focus(); n.setSelectionRange(pos,pos); },200);
+});
+function exportCsv(){
+  const pend=state.section==='pending', sup=state.section==='support', rows=currentRows(),
+    keys=sup?['url','order_number','status','full_name','raw','graded','total_cards','bins','pending_scan_cards']:pend?['card_url','card_status','ac8_number','cert_number','set_name','player_name','set_number','grade']
+             :['url','set_sport','card_sport','player_name','grader_name','verified_date','source','card_status','set_name','root_key'];
+  const q=v=>`"${String(v??'').replace(/"/g,'""')}"`;
+  const csv=[keys.join(','),...rows.map(r=>keys.map(k=>q(r[k])).join(','))].join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=`${sup?'customer-support':pend?'pending-data-issue':'mismatch-set'}-${todayISO()}.csv`; a.click();
+}
+
+state.clicked=new Set(lsGet()); render(); Promise.all([load(state.section),loadClicked()]).then(()=>{ state.loadedAt=new Date(); render(); });
+</script>
+</body>
+</html>

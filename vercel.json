@@ -1,0 +1,1 @@
+{ "functions": { "api/metabase.js": { "maxDuration": 60 } } }
