@@ -214,8 +214,12 @@ const statusOf = s => STATUS[norm(s)] || { c:'#8a96a3' };
 const titleCase = s => nice(s).replace(/\b\w/g, m=>m.toUpperCase());
 
 
-function keySupport(r){ r.root_key = 'support-'+String(r.order_number||r.url||'').replace(/[^\w-]/g,''); return r; }
-function keyPending(r){ r.root_key = 'pending-'+String(r.ac8_number||r.card_url||'').replace(/[^\w-]/g,''); return r; }
+// Stable id per row, used to hide a row once its link is clicked.
+const cleanKey = v => String(v ?? '').replace(/[^A-Za-z0-9_-]/g,'').slice(0,56);
+const idFromUrl = (u, seg) => { const m = String(u||'').match(new RegExp(seg+'/([^/?#]+)')); return m ? m[1] : ''; };
+function keyMismatch(r){ r.root_key = 'mm-'+cleanKey(r.root_key || idFromUrl(r.url,'cards') || r.url); return r; }
+function keySupport(r){ r.root_key = 'support-'+cleanKey(r.order_number || idFromUrl(r.url,'orders') || r.url); return r; }
+function keyPending(r){ r.root_key = 'pending-'+cleanKey(r.ac8_number || idFromUrl(r.card_url,'cards') || r.card_url); return r; }
 
 /* ---------- state ---------- */
 const state = {
@@ -248,6 +252,7 @@ async function load(sectionId){
     state.rows[sectionId] = (Array.isArray(data)?data:data.rows||[]).map(o=>{
       const x={}; for(const k in o) x[k.toLowerCase()]=o[k];
       if(x.verified_date) x.verified_date=String(x.verified_date).slice(0,10);
+      if(sectionId==='mismatch') keyMismatch(x);
       if(sectionId==='pending') keyPending(x);
       if(sectionId==='support') keySupport(x);
       return x;

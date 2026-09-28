@@ -25,7 +25,7 @@ Without DATABASE_URL the app falls back to saving opened cards in the browser on
 Column names from Metabase are lowercased. Each question must return:
 
 Mis-match Set (SECTIONS → mismatch):
-url, set_sport, card_sport, player_name, grader_name, verified_date, source, card_status, set_name, root_key
+url, set_sport, card_sport, player_name, grader_name, verified_date, source, card_status, set_name (root_key optional — card id is read from the url)
 
 Pending Data Issue (SECTIONS → pending):
 card_url, card_status, ac8_number, cert_number, set_name, player_name, set_number, grade
